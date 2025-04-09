@@ -48,6 +48,51 @@ def download_files_from_gcp(source_folder, destination_folder):
         return imagePaths
     except Exception as e:
         print(f"Error downloading files: {str(e)}")
+        raise e
+
+def upload_files_to_gcp(source_folder, destination_folder):
+    """
+    Uploads files from a local folder to GCP bucket
+    
+    Args:
+        source_folder (str): Local folder path containing files
+        destination_folder (str): Folder path in the bucket (e.g., 'videos/')
+    """
+    try:
+        # Initialize the GCP storage client
+        storage_client = storage.Client()
+        
+        # Get the bucket
+        bucket = storage_client.bucket(BUCKET_NAME)
+        
+        uploaded_paths = []
+
+        # Upload all files in the source folder
+        for filename in os.listdir(source_folder):
+            #Get path of the file
+            filename = os.path.basename(filename)
+            source_path = os.path.join(source_folder, filename)
+            
+            # Skip if it's a directory
+            if os.path.isdir(source_path):
+                continue
+                
+            # Create destination blob path
+            destination_blob_name = f"{destination_folder}/{filename}"
+            blob = bucket.blob(destination_blob_name)
+            
+            # Upload the file
+            blob.upload_from_filename(source_path)
+            uploaded_paths.append(destination_blob_name)
+            print(f"Uploaded: {filename}")
+            
+        print("All files uploaded successfully!")
+        return uploaded_paths
+        
+    except Exception as e:
+        print(f"Error uploading files: {str(e)}")
+        raise e
+        return []
 
 if __name__ == "__main__": 
     SOURCE_FOLDER = "images/"         # Folder in GCP bucket
